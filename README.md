@@ -36,8 +36,7 @@
 	### Create the service principal account
 
     ``
-	az ad sp create-for-rbac --role="Contributor" 
-	--scopes="/subscriptions/SUBSCRIPTION_ID"
+	MSYS_NO_PATHCONV=1 az ad sp create-for-rbac --name "devops" --role contributor --scopes /subscriptions/<Azure-SubscriptionId>
     ```
 
 	[Optional]
