@@ -8,3 +8,11 @@ variable "location" {
 }
 
 variable "resource_group_name" {}
+
+variable "vnet_address_space" {
+  type = list
+}
+
+variable "vnet_name" {
+type = string
+}
