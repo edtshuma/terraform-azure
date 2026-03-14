@@ -8,7 +8,34 @@ Start from the `master` branch, then follow this first-time setup once per machi
 
 ## Recipe 01 - First-time Azure access from this machine
 
-### 1) What to collect from Azure Portal first
+An Azure Free Account typically starts with one initial subscription under your tenant context. Later, you can have multiple subscriptions in the same tenant, and you can also access other tenants. For Terraform, always confirm the active `tenant_id` + `subscription_id` pair before apply.
+
+---
+
+## Brand-new Free Trial account: what happens
+
+Use this mental model if this is your first-ever Azure account signup.
+
+1. You create/sign in with a Microsoft identity (your login account).
+2. Azure provisions a **Free Trial subscription** for billing/resource scope.
+3. Azure provisions a default **Microsoft Entra tenant (directory)** for identity scope.
+4. The new subscription is associated with that tenant (a subscription belongs to one tenant at a time).
+5. Your user is granted administrative access to that tenant/subscription context.
+6. You can then deploy resources inside that subscription after selecting it in CLI context.
+
+Important wording nuance:
+- Treat **Microsoft Entra** and **Tenant/Directory** as one identity boundary concept in this context (not two separate long-lived platform objects you manage independently).
+
+### Special note - Service Principal (Terraform)
+
+For a brand-new free trial account, Azure does **not** automatically create a dedicated Terraform automation Service Principal for you.
+
+- You must create it explicitly (for example with `az ad sp create-for-rbac`).
+- Capture and store credentials securely (`appId/client_id`, `password/client_secret`, `tenant`).
+- Prefer least privilege scope (resource group scope if possible, subscription scope only when needed).
+- Never commit `client_secret` to Git.
+
+### 1) What to collect from Azure Portal
 
 Sign in at [https://portal.azure.com](https://portal.azure.com), then gather:
 
@@ -23,6 +50,7 @@ Sign in at [https://portal.azure.com](https://portal.azure.com), then gather:
 
 You will create the following from CLI:
 - Service Principal (`client_id`, `client_secret`, `tenant_id`)
+
 
 ---
 
@@ -224,7 +252,3 @@ How to read:
 - Subscription -> Tenant: many-to-one (each subscription belongs to one tenant at a time).
 - Tenant -> Service Principal: one-to-many.
 - Service Principal -> Subscription role assignments: many-to-many via RBAC scopes.
-
-### Azure Free Account mapping note
-
-An Azure Free Account typically starts with one initial subscription under your tenant context. Later, you can have multiple subscriptions in the same tenant, and you can also access other tenants. For Terraform, always confirm the active `tenant_id` + `subscription_id` pair before apply.
