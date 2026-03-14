@@ -14,17 +14,18 @@ An Azure Free Account typically starts with one initial subscription under your 
 
 ## Brand-new Free Trial account: what happens
 
-Use this mental model if this is your first-ever Azure account signup.
+Use this flow when this is your first-ever Azure account signup.
 
-1. You create/sign in with a Microsoft identity (your login account).
-2. Azure provisions a **Free Trial subscription** for billing/resource scope.
-3. Azure provisions a default **Microsoft Entra tenant (directory)** for identity scope.
-4. The new subscription is associated with that tenant (a subscription belongs to one tenant at a time).
-5. Your user is granted administrative access to that tenant/subscription context.
-6. You can then deploy resources inside that subscription after selecting it in CLI context.
+1. You sign up with a Microsoft identity (your login account).
+2. Azure creates a **Free Trial subscription** for billing and resource deployment scope.
+3. Azure creates (or associates) a default **Microsoft Entra tenant (directory)** for identity scope.
+4. Azure creates the tenant's **Root Management Group** automatically.
+5. The new subscription is placed under that root management group hierarchy.
+6. Your user is granted administrative access so you can manage tenant/subscription resources.
+7. No Terraform-specific automation identity exists yet; you create that next.
 
 Important wording nuance:
-- Treat **Microsoft Entra** and **Tenant/Directory** as one identity boundary concept in this context (not two separate long-lived platform objects you manage independently).
+- In day-to-day use, **Entra tenant** and **directory** refer to the same identity boundary.
 
 ### Special note - Service Principal (Terraform)
 
@@ -34,6 +35,41 @@ For a brand-new free trial account, Azure does **not** automatically create a de
 - Capture and store credentials securely (`appId/client_id`, `password/client_secret`, `tenant`).
 - Prefer least privilege scope (resource group scope if possible, subscription scope only when needed).
 - Never commit `client_secret` to Git.
+
+### Special note - Management Group
+
+What it is:
+- A **Management Group** is a governance container above subscriptions for policy/RBAC inheritance.
+
+Why Azure creates one automatically:
+- Azure needs a tenant-level root for governance hierarchy. The **Root Management Group** provides that anchor.
+- Every subscription in the tenant rolls up under this hierarchy (directly under root unless you create child management groups and move subscriptions).
+
+Why this matters now:
+- Even in a free trial, governance inheritance starts at the management group layer.
+- Later, when you add more subscriptions/environments, management groups help apply consistent policy and access controls centrally.
+
+### Quick verification (CLI + portal)
+
+Use these checks to confirm the new-account hierarchy quickly.
+
+Portal checks:
+1. `Microsoft Entra ID` -> `Overview`: confirm `Tenant ID`.
+2. `Subscriptions` -> your Free Trial subscription: confirm `Subscription ID`.
+3. `Management groups`: confirm root management group exists and subscription appears in hierarchy.
+
+CLI checks:
+
+```bash
+# Confirm active account context (tenant + subscription)
+az account show --output table
+
+# List subscriptions visible to your signed-in account
+az account list --output table
+
+# (Optional) verify management group hierarchy in tenant
+az account management-group list --output table
+```
 
 ### 1) What to collect from Azure Portal
 
@@ -252,3 +288,6 @@ How to read:
 - Subscription -> Tenant: many-to-one (each subscription belongs to one tenant at a time).
 - Tenant -> Service Principal: one-to-many.
 - Service Principal -> Subscription role assignments: many-to-many via RBAC scopes.
+
+---
+
